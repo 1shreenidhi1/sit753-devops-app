@@ -11,7 +11,6 @@ pipeline {
         stage('Build') {
             steps {
                 echo 'Building Docker Image artefact...'
-                // Using double quotes so Groovy injects the variables correctly
                 bat "docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} ."
             }
         }
@@ -19,7 +18,8 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running automated PyTest suite inside container...'
-                bat "docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} env PYTHONPATH=. pytest tests/ --junitxml=reports/results.xml"
+                bat "if not exist reports mkdir reports"
+                bat "docker run --rm -v \"%cd%/reports:/app/reports\" ${DOCKER_IMAGE}:${DOCKER_TAG} env PYTHONPATH=. pytest tests/ --junitxml=reports/results.xml"
             }
             post {
                 always {
