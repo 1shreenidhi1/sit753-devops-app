@@ -19,7 +19,7 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Running automated PyTest suite inside container...'
-                bat "docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} pytest tests/ --junitxml=reports/results.xml"
+                bat "docker run --rm ${DOCKER_IMAGE}:${DOCKER_TAG} env PYTHONPATH=. pytest tests/ --junitxml=reports/results.xml"
             }
             post {
                 always {
