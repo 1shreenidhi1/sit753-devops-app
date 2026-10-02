@@ -1,9 +1,9 @@
 from fastapi import FastAPI, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from sqlalchemy import create_engine, Column, Integer, String
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import sessionmaker, Session, declarative_base
 from prometheus_fastapi_instrumentator import Instrumentator
+from typing import Optional
 
 # SQLite Database Setup
 DATABASE_URL = "sqlite:///./tasks.db"
@@ -27,15 +27,14 @@ Instrumentator().instrument(app).expose(app)
 # Pydantic Schemas
 class TaskCreate(BaseModel):
     title: str
-    description: str = None
+    description: Optional[str] = None
 
 class TaskResponse(BaseModel):
     id: int
     title: str
-    description: str = None
+    description: Optional[str] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 def get_db():
     db = SessionLocal()
