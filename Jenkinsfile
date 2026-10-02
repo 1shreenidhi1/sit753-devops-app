@@ -51,7 +51,7 @@ pipeline {
                 bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} up -d --build --remove-orphans"
                 
                 echo 'Running automated tests inside container...'
-                bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} exec -T test-app pytest"
+                bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} exec -T app pytest"
 
                 echo 'Tearing down test environment...'
                 bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} down"
