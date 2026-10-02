@@ -34,9 +34,9 @@ pipeline {
         stage('Code Quality') {
             steps {
                 echo 'Running SonarQube code quality analysis...'
-                // Connects to your local SonarQube container using adminadmin credentials
+                // Connects to your local SonarQube container using your generated project token
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}:/usr/src\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.sources=. -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.login=admin -Dsonar.password=adminadmin"
+                    bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}:/usr/src\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.sources=. -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.token=sqp_1139504258e8d9aa887c392e66ea83b66d551fc6"
                 }
             }
         }
