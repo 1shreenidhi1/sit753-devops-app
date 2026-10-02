@@ -41,7 +41,8 @@ pipeline {
         stage('Container Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Executing Trivy vulnerability scan...'
-                bat "${env.TRIVY_BIN} image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
+                // Added --ignore-unfixed to skip unfixable base-image OS vulnerabilities
+                bat "${env.TRIVY_BIN} image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed ${IMAGE_NAME}:${DOCKER_TAG}"
             }
         }
 
@@ -51,7 +52,6 @@ pipeline {
                 bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} up -d --build --remove-orphans"
                 
                 echo 'Running automated tests inside container...'
-                // Updated to use python -m pytest to resolve ModuleNotFoundError
                 bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} exec -T app python -m pytest"
 
                 echo 'Tearing down test environment...'
