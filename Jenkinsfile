@@ -41,7 +41,7 @@ pipeline {
         stage('Container Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Executing Trivy vulnerability scan...'
-                bat "${env.TRIVY_BIN} image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
+                bat "${env.TRIVY_BIN} image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
             }
         }
 
