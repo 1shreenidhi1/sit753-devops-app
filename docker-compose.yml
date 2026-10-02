@@ -1,21 +1,12 @@
-version: '3.8'
-
 services:
   app:
-    image: sit753-devops-app:${DOCKER_TAG:-latest}
-    container_name: sit753-staging-app
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    image: sit753-devops-app:test
+    container_name: sit753-test-app
     ports:
       - "8000:8000"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: sit753-prometheus
-    ports:
-      - "9090:9090"
-    volumes:
-      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    environment:
+      - ENVIRONMENT=testing
+    restart: unless-stopped
