@@ -19,7 +19,7 @@ pipeline {
                 echo 'Running SonarQube static code analysis...'
                 script {
                     def scannerHome = tool 'sonar-scanner'
-                    bat "${scannerHome}\\bin\\sonar-scanner.bat -Dsonar.token=sqp_8d22f05acdc84c300fa7f86430a280baba3e4419 -Dsonar.host.url=http://localhost:9000"
+                    bat "${scannerHome}\\bin\\sonar-scanner.bat -Dsonar.login=sqp_8d22f05acdc84c300fa7f86430a280baba3e4419 -Dsonar.host.url=http://localhost:9000"
                 }
             }
         }
