@@ -7,9 +7,10 @@ pipeline {
         IMAGE_NAME = 'sit753-devops-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
         
-        // Explicit path definition for Docker binaries to resolve service account path issues
-        DOCKER_BIN = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        // Explicit path definitions for binaries to resolve service account path issues
+        DOCKER_BIN  = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
         COMPOSE_BIN = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
+        TRIVY_BIN   = 'C:\\Users\\shree\\AppData\\Local\\Microsoft\\WinGet\\Packages\\AquaSecurity.Trivy_Microsoft.Winget.Source_8wekyb3d8bbwe\\trivy.exe'
     }
 
     stages {
@@ -23,7 +24,7 @@ pipeline {
         stage('Security Scan') {
             steps {
                 echo 'Executing Trivy vulnerability scan...'
-                bat "trivy image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
+                bat "${env.TRIVY_BIN} image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
             }
         }
 
