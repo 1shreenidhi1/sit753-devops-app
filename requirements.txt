@@ -1,8 +1,8 @@
-fastapi==0.104.1
-uvicorn==0.24.0.post1
-pytest==7.4.3
-httpx==0.25.1
-sqlalchemy==2.0.23
-prometheus-fastapi-instrumentator==6.1.0
-bandit==1.7.5
-pbr
+fastapi==0.115.9
+uvicorn[standard]==0.34.0
+pytest==8.3.4
+httpx==0.28.1
+sqlalchemy==2.0.37
+prometheus-fastapi-instrumentator==7.0.2
+bandit==1.8.2
+pbr==6.1.0
