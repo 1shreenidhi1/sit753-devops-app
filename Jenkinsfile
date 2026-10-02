@@ -34,9 +34,9 @@ pipeline {
         stage('Code Quality') {
             steps {
                 echo 'Running SonarQube code quality analysis...'
-                // Connects to your local SonarQube container using your generated project token
+                // Uses -Dsonar.login for SonarQube v9.9 LTS authentication
                 catchError(buildResult: 'SUCCESS', stageResult: 'UNSTABLE') {
-                    bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}:/usr/src\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.sources=. -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.token=sqp_1139504258e8d9aa887c392e66ea83b66d551fc6"
+                    bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}:/usr/src\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.sources=. -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.login=sqp_1139504258e8d9aa887c392e66ea83b66d551fc6"
                 }
             }
         }
@@ -67,7 +67,8 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying staging environment with Docker Compose using built artefact...'
-                bat "set DOCKER_TAG=${DOCKER_TAG}&& ${env.DOCKER_COMPOSE} up -d"
+                // Added --remove-orphans to clear port 8000 conflicts automatically
+                bat "set DOCKER_TAG=${DOCKER_TAG}&& ${env.DOCKER_COMPOSE} up -d --remove-orphans"
             }
         }
         
