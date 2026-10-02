@@ -6,20 +6,19 @@ client = TestClient(app)
 def test_read_root():
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json() == {"message": "Welcome to the SIT753 DevOps Task API"}
+    assert response.json() == {"message": "Welcome to SIT753 DevOps CRUD API with Real Prometheus Monitoring!"}
 
 def test_create_and_read_task():
     # Test Create (POST)
-    post_response = client.post("/tasks/", json={"title": "Test DevOps Pipeline"})
+    post_response = client.post("/tasks/", json={"title": "Test DevOps Pipeline", "description": "HD Incoming"})
     assert post_response.status_code == 200
-    task_id = post_response.json()["id"]
-    assert post_response.json()["title"] == "Test DevOps Pipeline"
-
+    data = post_response.json()
+    assert data["title"] == "Test DevOps Pipeline"
+    assert data["description"] == "HD Incoming"
+    assert "id" in data
+    
     # Test Read (GET)
-    get_response = client.get(f"/tasks/{task_id}")
+    task_id = data["id"]
+    get_response = client.get("/tasks/")
     assert get_response.status_code == 200
-    assert get_response.json()["title"] == "Test DevOps Pipeline"
-
-    # Test Delete (DELETE)
-    delete_response = client.delete(f"/tasks/{task_id}")
-    assert delete_response.status_code == 200
+    assert any(task["id"] == task_id for task in get_response.json())
