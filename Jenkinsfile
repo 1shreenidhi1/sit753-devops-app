@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         // Connects Jenkins to Docker Desktop via TCP port to bypass Windows pipe permissions
-        DOCKER_HOST = "tcp://localhost:2375"
+        DOCKER_HOST = "tcp://127.0.0.1:2375"
         
         DOCKER = "C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
         DOCKER_COMPOSE = "C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe"
