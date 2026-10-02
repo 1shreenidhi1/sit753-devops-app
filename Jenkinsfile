@@ -2,17 +2,21 @@ pipeline {
     agent any
 
     environment {
-        PROD_PORT  = '8081'  // Configured to avoid port conflict with Jenkins on 8080
+        PROD_PORT  = '8081'  // Avoids host port conflict on 8080
         APP_PORT   = '8000'
         IMAGE_NAME = 'sit753-devops-app'
         DOCKER_TAG = "${BUILD_NUMBER}"
+        
+        // Explicit path definition for Docker binaries to resolve service account path issues
+        DOCKER_BIN = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        COMPOSE_BIN = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
     }
 
     stages {
         stage('Build') {
             steps {
                 echo 'Building Docker image...'
-                bat "docker build -t ${IMAGE_NAME}:${DOCKER_TAG} ."
+                bat "${env.DOCKER_BIN} build -t ${IMAGE_NAME}:${DOCKER_TAG} ."
             }
         }
         
@@ -26,12 +30,10 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Initializing test environment via Docker Compose...'
-                bat "docker-compose up -d --build --remove-orphans"
-                
-                // Add test execution commands here if applicable
+                bat "${env.COMPOSE_BIN} up -d --build --remove-orphans"
                 
                 echo 'Tearing down test environment...'
-                bat "docker-compose down"
+                bat "${env.COMPOSE_BIN} down"
             }
         }
 
@@ -39,9 +41,11 @@ pipeline {
             steps {
                 echo 'Tagging release version and deploying to production environment...'
                 
-                bat "docker tag ${IMAGE_NAME}:${DOCKER_TAG} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
-                bat "docker rm -f sit753-prod-app || exit 0"
-                bat "docker run -d --name sit753-prod-app -p ${PROD_PORT}:${APP_PORT} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
+                bat "${env.DOCKER_BIN} tag ${IMAGE_NAME}:${DOCKER_TAG} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
+                bat "${env.DOCKER_BIN} rm -f sit753-prod-app || exit 0"
+                
+                // Uses PROD_PORT '8081' to prevent socket bind collisions
+                bat "${env.DOCKER_BIN} run -d --name sit753-prod-app -p ${PROD_PORT}:${APP_PORT} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
                 
                 echo 'Verifying application health...'
                 retry(5) {
@@ -56,7 +60,7 @@ pipeline {
         always {
             echo 'Cleaning up workspace and unused Docker resources...'
             cleanWs()
-            bat "docker image prune -f"
+            bat "${env.DOCKER_BIN} image prune -f"
         }
         success {
             echo "Pipeline executed successfully. Application running on port ${PROD_PORT}."
