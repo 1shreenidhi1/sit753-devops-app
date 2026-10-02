@@ -8,12 +8,29 @@ pipeline {
         DOCKER_TAG = "${BUILD_NUMBER}"
         
         // Explicit path definitions for binaries to resolve service account path issues
-        DOCKER_BIN  = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
-        COMPOSE_BIN = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
-        TRIVY_BIN   = 'C:\\Users\\shree\\AppData\\Local\\Microsoft\\WinGet\\Packages\\AquaSecurity.Trivy_Microsoft.Winget.Source_8wekyb3d8bbwe\\trivy.exe'
+        DOCKER_BIN    = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe'
+        COMPOSE_BIN   = 'C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe'
+        TRIVY_BIN     = 'C:\\Users\\shree\\AppData\\Local\\Microsoft\\WinGet\\Packages\\AquaSecurity.Trivy_Microsoft.Winget.Source_8wekyb3d8bbwe\\trivy.exe'
+        SONAR_SCANNER = 'sonar-scanner' // Configured via Jenkins Global Tool Configuration
     }
 
     stages {
+        stage('Code Quality (SonarQube)') {
+            steps {
+                echo 'Running SonarQube static code analysis...'
+                // Evaluates code structure against your sonar-project.properties file
+                bat "${env.SONAR_SCANNER}"
+            }
+        }
+
+        stage('Security Scan (Bandit)') {
+            steps {
+                echo 'Running Bandit Python security linter...'
+                // Scans Python files for vulnerabilities and insecure coding patterns
+                bat "bandit -r . -ll -ii"
+            }
+        }
+
         stage('Build') {
             steps {
                 echo 'Building Docker image...'
@@ -21,20 +38,25 @@ pipeline {
             }
         }
         
-        stage('Security Scan') {
+        stage('Container Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Executing Trivy vulnerability scan...'
-                bat "${env.TRIVY_BIN} image --exit-code 0 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
+                // Enforces failure on High/Critical vulnerabilities (--exit-code 1)
+                bat "${env.TRIVY_BIN} image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
             }
         }
 
         stage('Test') {
             steps {
                 echo 'Initializing test environment via Docker Compose...'
-                bat "${env.COMPOSE_BIN} up -d --build --remove-orphans"
+                // Passes the unique build tag so compose validates the exact built artifact
+                bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} up -d --build --remove-orphans"
                 
+                echo 'Running automated tests inside container...'
+                bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} exec -T test-app pytest"
+
                 echo 'Tearing down test environment...'
-                bat "${env.COMPOSE_BIN} down"
+                bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} down"
             }
         }
 
@@ -45,7 +67,7 @@ pipeline {
                 bat "${env.DOCKER_BIN} tag ${IMAGE_NAME}:${DOCKER_TAG} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
                 bat "${env.DOCKER_BIN} rm -f sit753-prod-app || exit 0"
                 
-                // Uses PROD_PORT '8081' to prevent socket bind collisions
+                // Deploy versioned container artifact to the designated production port
                 bat "${env.DOCKER_BIN} run -d --name sit753-prod-app -p ${PROD_PORT}:${APP_PORT} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
                 
                 echo 'Verifying application health...'
@@ -67,7 +89,7 @@ pipeline {
             echo "Pipeline executed successfully. Application running on port ${PROD_PORT}."
         }
         failure {
-            echo 'Pipeline execution failed.'
+            echo 'Pipeline execution failed due to quality or security gate violations.'
         }
     }
 }
