@@ -27,7 +27,7 @@ pipeline {
         stage('Security Scan (Bandit)') {
             steps {
                 echo 'Running Bandit Python security linter...'
-                bat "bandit -r . -ll -ii"
+                bat "python -m bandit -r . -ll -ii"
             }
         }
 
