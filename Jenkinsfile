@@ -2,9 +2,6 @@ pipeline {
     agent any
     
     environment {
-        // Explicitly forces IPv4 to prevent Windows [::1] connection refusal errors
-        DOCKER_HOST = "tcp://127.0.0.1:2375"
-        
         DOCKER = "C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker.exe"
         DOCKER_COMPOSE = "C:\\Users\\shree\\AppData\\Local\\Programs\\DockerDesktop\\resources\\bin\\docker-compose.exe"
         DOCKER_IMAGE = "sit753-devops-app"
@@ -25,7 +22,6 @@ pipeline {
             steps {
                 echo 'Running automated PyTest suite inside container...'
                 bat "if not exist reports mkdir reports"
-                // Using Jenkins WORKSPACE variable for reliable path binding on Windows
                 bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}/reports:/app/reports\" ${DOCKER_IMAGE}:${DOCKER_TAG} env PYTHONPATH=. pytest tests/ --junitxml=reports/results.xml"
             }
             post {
