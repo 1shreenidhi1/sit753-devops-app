@@ -1,4 +1,3 @@
-# Using a slim base image to reduce operating system vulnerabilities
 FROM python:3.9-slim-bookworm
 
 ENV PYTHONDONTWRITEBYTECODE=1
