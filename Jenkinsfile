@@ -18,9 +18,8 @@ pipeline {
             steps {
                 echo 'Running SonarQube static code analysis...'
                 script {
-                    // Dynamically fetches the tool path configured in Jenkins Global Tool Configuration
                     def scannerHome = tool 'sonar-scanner'
-                    bat "${scannerHome}\\bin\\sonar-scanner.bat"
+                    bat "${scannerHome}\\bin\\sonar-scanner.bat -Dsonar.token=sqp_8d22f05acdc84c300fa7f86430a280baba3e4419 -Dsonar.host.url=http://localhost:9000"
                 }
             }
         }
@@ -28,7 +27,6 @@ pipeline {
         stage('Security Scan (Bandit)') {
             steps {
                 echo 'Running Bandit Python security linter...'
-                // Scans Python files for vulnerabilities and insecure coding patterns
                 bat "bandit -r . -ll -ii"
             }
         }
@@ -43,7 +41,6 @@ pipeline {
         stage('Container Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Executing Trivy vulnerability scan...'
-                // Enforces failure on High/Critical vulnerabilities (--exit-code 1)
                 bat "${env.TRIVY_BIN} image --exit-code 1 --severity HIGH,CRITICAL ${IMAGE_NAME}:${DOCKER_TAG}"
             }
         }
@@ -51,7 +48,6 @@ pipeline {
         stage('Test') {
             steps {
                 echo 'Initializing test environment via Docker Compose...'
-                // Passes the unique build tag so compose validates the exact built artifact
                 bat "set TAG=${DOCKER_TAG} && ${env.COMPOSE_BIN} up -d --build --remove-orphans"
                 
                 echo 'Running automated tests inside container...'
@@ -69,7 +65,6 @@ pipeline {
                 bat "${env.DOCKER_BIN} tag ${IMAGE_NAME}:${DOCKER_TAG} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
                 bat "${env.DOCKER_BIN} rm -f sit753-prod-app || exit 0"
                 
-                // Deploy versioned container artifact to the designated production port
                 bat "${env.DOCKER_BIN} run -d --name sit753-prod-app -p ${PROD_PORT}:${APP_PORT} ${IMAGE_NAME}:v1.0.${DOCKER_TAG}"
                 
                 echo 'Verifying application health...'
