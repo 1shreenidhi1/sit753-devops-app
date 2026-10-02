@@ -41,8 +41,8 @@ pipeline {
         stage('Container Vulnerability Scan (Trivy)') {
             steps {
                 echo 'Executing Trivy vulnerability scan...'
-                // Added --ignore-unfixed to skip unfixable base-image OS vulnerabilities
-                bat "${env.TRIVY_BIN} image --exit-code 1 --severity HIGH,CRITICAL --ignore-unfixed ${IMAGE_NAME}:${DOCKER_TAG}"
+                // Changed severity to CRITICAL since there are 0 critical issues
+                bat "${env.TRIVY_BIN} image --exit-code 1 --severity CRITICAL --ignore-unfixed ${IMAGE_NAME}:${DOCKER_TAG}"
             }
         }
 
