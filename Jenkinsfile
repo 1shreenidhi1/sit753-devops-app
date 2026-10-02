@@ -34,7 +34,7 @@ pipeline {
         stage('Code Quality') {
             steps {
                 echo 'Running SonarQube code quality analysis via Docker scanner...'
-                bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}:/usr/src\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.sources=. || echo 'Sonar scan completed or skipped due to server connection'"
+                bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}:/usr/src\" sonarsource/sonar-scanner-cli -Dsonar.projectKey=${SONAR_PROJECT_KEY} -Dsonar.sources=."
             }
         }
         
@@ -43,10 +43,10 @@ pipeline {
                 echo 'Running security scanning on code and dependencies...'
                 bat "if not exist reports mkdir reports"
                 
-                // Run Bandit inside container using WORKSPACE path
-                bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}/reports:/app/reports\" ${DOCKER_IMAGE}:${DOCKER_TAG} python -m bandit -r app.py -f json -o reports/bandit-report.json || true"
+                // Run Bandit security scanner
+                bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}/reports:/app/reports\" ${DOCKER_IMAGE}:${DOCKER_TAG} python -m bandit -r app.py -f json -o reports/bandit-report.json"
                 
-                // Save image to tarball and scan with Trivy container
+                // Run Trivy image vulnerability scan
                 bat "${env.DOCKER} save ${DOCKER_IMAGE}:${DOCKER_TAG} -o reports/image.tar"
                 bat "${env.DOCKER} run --rm -v \"${env.WORKSPACE}/reports:/reports\" aquasec/trivy:latest image --input /reports/image.tar --severity HIGH,CRITICAL"
             }
@@ -59,8 +59,8 @@ pipeline {
         
         stage('Deploy') {
             steps {
-                echo 'Deploying to staging environment using Docker Compose...'
-                bat "${env.DOCKER_COMPOSE} up -d"
+                echo 'Deploying staging environment with Docker Compose using built artefact...'
+                bat "set DOCKER_TAG=${DOCKER_TAG}&& ${env.DOCKER_COMPOSE} up -d"
             }
         }
         
